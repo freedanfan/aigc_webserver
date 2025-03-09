@@ -8,7 +8,7 @@ router = APIRouter(tags=["图像生成"])
 image_generator = ImageGenerator()
 
 # 创建路由
-@router.post("/image_generation", response_model=Text2ImageResponse, summary="文本生成图像", description="根据文本提示词生成图像")
+@router.post("/image/generate", response_model=Text2ImageResponse, summary="文本生成图像", description="根据文本提示词生成图像")
 async def image_generation(
     request: Dict[str, Any] = Body(
         ...,
