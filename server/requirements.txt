@@ -1,0 +1,16 @@
+# 核心依赖
+fastapi>=0.104.0
+uvicorn>=0.23.2
+pydantic>=2.4.2
+python-dotenv>=1.0.0
+requests>=2.31.0
+boto3>=1.28.64
+together>=0.1.5
+
+numpy
+
+# 开发依赖（可选，取消注释使用）
+# pytest>=7.4.2
+# black>=23.9.1
+# isort>=5.12.0
+# flake8>=6.1.0 
