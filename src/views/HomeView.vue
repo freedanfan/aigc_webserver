@@ -19,7 +19,7 @@ const previewImage = ref('')
 const previewTitle = ref('')
 const hasUploadedImage = ref(false) // 是否已上传图片
 const imageBase64 = ref<string>('') // 存储图片的 base64 编码
-const imageCount = ref<number>(1) // 生成图片数量，默认为 1
+const imageCount = ref<number>(1) // 生成图片数量，默认为 1，最大为 6
 
 // 生成图片相关状态
 const generatedImages = ref<GeneratedImage[]>([])
@@ -326,7 +326,7 @@ const handleSend = generateImage
                   <a-input-number
                     v-model:value="imageCount"
                     :min="1"
-                    :max="10"
+                    :max="6"
                     size="small"
                   />
                 </div>

@@ -6,7 +6,7 @@ import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'ax
  */
 const service = axios.create({
   baseURL: '', // 如果所有请求都已经通过 Vite 代理，这里可以为空
-  timeout: 15000, // 请求超时时间，单位毫秒
+  timeout: 200000, // 请求超时时间，单位毫秒
   headers: {
     'Content-Type': 'application/json;charset=utf-8' // 默认请求头
   }

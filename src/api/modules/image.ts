@@ -2,7 +2,7 @@ import { get, post, del } from '@/utils/request'
 import { ResponseData, GenerateImageParams, GeneratedImage, PaginationResult } from '../types'
 
 // 是否使用模拟数据（当后端服务不可用时）
-const USE_MOCK = true
+const USE_MOCK = false
 
 /**
  * 生成模拟图片数据
@@ -61,7 +61,7 @@ export default {
     }
     
     // 否则调用真实 API
-    return post('/api/image/generate', params)
+    return post('/api/image_generation', params)
   },
   
   /**
