@@ -3,6 +3,8 @@ import { ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { DownOutlined, InboxOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import type { UploadProps, UploadFile } from 'ant-design-vue'
+import { imageApi } from '@/api'
+import { GenerateImageParams, GeneratedImage } from '@/api/types'
 
 const inputValue = ref('')
 const negativePromptValue = ref('') // 反向提示词输入框的值
@@ -16,14 +18,12 @@ const previewVisible = ref(false)
 const previewImage = ref('')
 const previewTitle = ref('')
 const hasUploadedImage = ref(false) // 是否已上传图片
+const imageBase64 = ref<string>('') // 存储图片的 base64 编码
+const imageCount = ref<number>(1) // 生成图片数量，默认为 1
 
 // 生成图片相关状态
-const generatedImages = ref([
-  { id: 1, url: 'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png', title: '生成图片 1' },
-  { id: 2, url: 'https://gw.alipayobjects.com/zos/antfincdn/LlvErxo8H9/photo-1503185912284-5271ff81b9a8.webp', title: '生成图片 2' },
-  { id: 3, url: 'https://gw.alipayobjects.com/zos/antfincdn/cV16ZqzMjW/photo-1473091540282-9b846e7965e3.webp', title: '生成图片 3' },
-  { id: 4, url: 'https://gw.alipayobjects.com/zos/antfincdn/x43I27A55%26/photo-1438109491414-7198515b166b.webp', title: '生成图片 4' },
-])
+const generatedImages = ref<GeneratedImage[]>([])
+const isGenerating = ref<boolean>(false) // 是否正在生成图片
 
 // 为每个选项创建独立的状态
 const stylePrompt = ref<string>('no-style')
@@ -76,7 +76,25 @@ const promptOptions = {
   ]
 }
 
-// 上传前检查文件
+/**
+ * 将文件转换为 Base64
+ * @param file 要转换的文件对象
+ * @returns Promise，解析为 base64 字符串
+ */
+const getBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = error => reject(error)
+  })
+}
+
+/**
+ * 上传前检查文件
+ * @param file 要上传的文件
+ * @returns 是否允许上传
+ */
 const beforeUpload: UploadProps['beforeUpload'] = (file) => {
   const isImage = file.type.startsWith('image/')
   if (!isImage) {
@@ -89,7 +107,10 @@ const beforeUpload: UploadProps['beforeUpload'] = (file) => {
   return isImage && isLt20M
 }
 
-// 处理图片预览
+/**
+ * 处理图片预览
+ * @param file 要预览的文件
+ */
 const handlePreview = async (file: UploadFile) => {
   if (!file.url && !file.preview) {
     if (file.originFileObj) {
@@ -101,53 +122,112 @@ const handlePreview = async (file: UploadFile) => {
   previewTitle.value = file.name || file.url?.substring(file.url.lastIndexOf('/') + 1) || ''
 }
 
-// 处理图片上传状态变化
-const handleChange: UploadProps['onChange'] = ({ fileList: newFileList }) => {
+/**
+ * 处理图片上传状态变化
+ * @param info 上传信息
+ */
+const handleChange: UploadProps['onChange'] = async ({ fileList: newFileList }) => {
   fileList.value = newFileList
   // 当有文件时，显示预览
   hasUploadedImage.value = newFileList.length > 0
   
-  // 如果有新上传的文件，尝试生成预览
-  if (newFileList.length > 0 && newFileList[0].originFileObj && !newFileList[0].preview) {
-    getBase64(newFileList[0].originFileObj).then(url => {
+  // 如果有新上传的文件，转换为 base64
+  if (newFileList.length > 0 && newFileList[0].originFileObj) {
+    try {
+      // 获取并存储 base64 编码
+      imageBase64.value = await getBase64(newFileList[0].originFileObj)
+      
+      // 设置预览图
       if (fileList.value.length > 0) {
-        fileList.value[0].preview = url
+        fileList.value[0].preview = imageBase64.value
       }
-    })
+    } catch (error) {
+      console.error('转换图片为 base64 失败:', error)
+      message.error('图片处理失败，请重新上传')
+    }
+  } else {
+    // 如果没有文件，清空 base64 编码
+    imageBase64.value = ''
   }
 }
 
-// 删除图片
+/**
+ * 删除图片
+ */
 const handleRemove = () => {
   fileList.value = []
   hasUploadedImage.value = false
+  imageBase64.value = '' // 清空 base64 编码
 }
 
-// 将文件转换为 Base64
-const getBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = error => reject(error)
-  })
-}
-
-// 模拟生成图片
-const generateImage = () => {
-  if (!inputValue.value.trim() && fileList.value.length === 0) {
-    message.warning('请输入内容或上传图片')
+/**
+ * 生成图片
+ * 将用户输入的提示词和上传的图片发送到后台
+ */
+const generateImage = async () => {
+  // 验证输入，确保正向提示词已填写（必填项）
+  if (!inputValue.value.trim()) {
+    message.warning('请输入正向提示词')
     return
   }
   
+  // 设置加载状态
   loading.value = true
+  isGenerating.value = true
   
-  // 模拟发送请求
-  setTimeout(() => {
-    message.success('图片生成成功')
-    inputValue.value = ''
-    loading.value = false
-  }, 1000)
+  try {
+    // 准备请求参数，构建 API 所需的参数对象
+    const params: GenerateImageParams = {
+      // 用户输入的正向提示词（必填）
+      prompt: inputValue.value,
+      
+      // 生成图片数量
+      count: imageCount.value,
+      
+      // 仅当用户开启反向提示词时，才添加反向提示词
+      negativePrompt: useNegativePrompt.value ? negativePromptValue.value : undefined,
+      
+      // 仅当用户选择了非默认风格时，才添加风格参数
+      stylePrompt: stylePrompt.value !== 'no-style' ? stylePrompt.value : undefined,
+      
+      // 仅当用户选择了非默认色彩时，才添加色彩参数
+      colorPrompt: colorPrompt.value !== 'no-color' ? colorPrompt.value : undefined,
+      
+      // 仅当用户选择了非默认光照时，才添加光照参数
+      lightPrompt: lightPrompt.value !== 'no-light' ? lightPrompt.value : undefined,
+      
+      // 仅当用户选择了非默认构图时，才添加构图参数
+      compositionPrompt: compositionPrompt.value !== 'no-composition' ? compositionPrompt.value : undefined
+    }
+    
+    // 如果用户上传了参考图片，将其 base64 编码添加到参数中
+    if (imageBase64.value) {
+      params.referenceImage = imageBase64.value
+    }
+    
+    // 调用 API 生成图片，等待响应
+    // 注意：即使后端服务未启动，由于我们添加了模拟数据功能，这里仍然会正常工作
+    const res = await imageApi.generateImage(params)
+    
+    // 处理响应结果
+    if (res.data && res.data.length > 0) {
+      // 更新生成的图片列表，显示在界面上
+      generatedImages.value = res.data
+      message.success(`成功生成 ${res.data.length} 张图片`)
+    } else {
+      // 如果返回的数据为空，提示用户调整参数
+      message.warning('未能生成图片，请调整提示词后重试')
+    }
+  } catch (error) {
+    // 捕获并处理请求过程中的错误
+    console.error('生成图片失败:', error)
+    message.error('图片生成失败，请稍后重试')
+  } finally {
+    // 无论成功还是失败，都需要重置状态
+    loading.value = false  // 关闭加载状态
+    isGenerating.value = false // 关闭生成状态
+    inputValue.value = ''  // 清空输入框
+  }
 }
 
 const handleSend = generateImage
@@ -223,7 +303,7 @@ const handleSend = generateImage
               
               <a-textarea
                 v-model:value="inputValue"
-                placeholder="请输入正向提示词..."
+                placeholder="请输入正向提示词...(必填)"
                 rows="4"
               />
               
@@ -240,6 +320,17 @@ const handleSend = generateImage
                   :checked-children="'开启反向提示词'" 
                   :un-checked-children="'关闭反向提示词'"
                 />
+                
+                <div class="image-count-container">
+                  <span class="image-count-label">生成数量:</span>
+                  <a-input-number
+                    v-model:value="imageCount"
+                    :min="1"
+                    :max="10"
+                    size="small"
+                  />
+                </div>
+                
                 <a-button type="primary" @click="generateImage" :loading="loading" class="send-button">
                   生成图片
                 </a-button>
@@ -298,7 +389,13 @@ const handleSend = generateImage
         <div class="result-panel">
           <div class="result-container">
             <h2 class="result-title">生成结果</h2>
-            <div class="result-gallery">
+            <div v-if="isGenerating" class="loading-container">
+              <a-spin tip="正在生成图片，请稍候..." />
+            </div>
+            <div v-else-if="generatedImages.length === 0" class="empty-result">
+              <p>暂无生成结果，请点击"生成图片"按钮开始生成</p>
+            </div>
+            <div v-else class="result-gallery">
               <div v-for="image in generatedImages" :key="image.id" class="result-item">
                 <a-image
                   :src="image.url"
@@ -607,6 +704,17 @@ const handleSend = generateImage
   gap: 16px;
 }
 
+.image-count-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.image-count-label {
+  color: #fff;
+  font-size: 0.9rem;
+}
+
 .send-button {
   background: linear-gradient(45deg, #0ff, #f0f);
   border: none;
@@ -763,5 +871,23 @@ const handleSend = generateImage
   .header-content {
     padding: 0 8px;
   }
+}
+
+/* 添加新样式 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.empty-result {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 1rem;
+  text-align: center;
 }
 </style> 
