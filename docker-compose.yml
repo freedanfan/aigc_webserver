@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  aigc-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aigc-frontend
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - aigc-network
+
+networks:
+  aigc-network:
+    driver: bridge 

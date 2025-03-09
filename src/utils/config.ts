@@ -14,7 +14,7 @@ export const DEBUG = import.meta.env.VITE_APP_DEBUG === 'true'
 
 // API 配置
 export const API_BASE_URL = import.meta.env.VITE_APP_API_BASE_URL || ''
-export const API_PREFIX = import.meta.env.VITE_APP_API_PREFIX || '/api'
+export const API_PREFIX = import.meta.env.VITE_APP_API_PREFIX || ''
 export const USE_MOCK = import.meta.env.VITE_APP_USE_MOCK === 'true'
 
 // 完整的 API URL

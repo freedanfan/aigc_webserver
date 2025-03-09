@@ -12,8 +12,8 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd())
   
   // 获取环境变量，如果不存在则使用默认值
-  const apiBaseUrl = env.VITE_APP_API_BASE_URL || 'http://localhost:11002'
-  const apiPrefix = env.VITE_APP_API_PREFIX || '/api'
+  const apiBaseUrl = env.VITE_APP_API_BASE_URL 
+  const apiPrefix = env.VITE_APP_API_PREFIX 
   
   return {
     plugins: [vue()],
