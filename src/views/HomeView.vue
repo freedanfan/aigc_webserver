@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { message } from 'ant-design-vue'
 import { DownOutlined, InboxOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import type { UploadProps, UploadFile } from 'ant-design-vue'
@@ -75,6 +75,18 @@ const promptOptions = {
     { label: '框架构图', value: 'framing composition' },
     { label: '前景层次', value: 'foreground depth' }
   ]
+}
+
+// 检测是否为移动设备
+const isMobile = computed(() => {
+  return window.innerWidth <= 768
+})
+
+// 监听窗口大小变化
+if (typeof window !== 'undefined') {
+  window.addEventListener('resize', () => {
+    // 这里不需要做任何事情，因为 computed 会自动重新计算
+  })
 }
 
 /**
@@ -322,15 +334,15 @@ const handleSend = generateImage
                 <div class="options-group">
                   <a-switch 
                     v-model:checked="needOptimizePrompt" 
-                    :checked-children="'优化提示词'" 
-                    :un-checked-children="'不优化提示词'"
+                    :checked-children="isMobile ? '优化' : '优化提示词'" 
+                    :un-checked-children="isMobile ? '不优化' : '不优化提示词'"
                     class="option-switch"
                   />
                   
                   <a-switch 
                     v-model:checked="useNegativePrompt" 
-                    :checked-children="'开启反向提示词'" 
-                    :un-checked-children="'关闭反向提示词'"
+                    :checked-children="isMobile ? '反向' : '反向提示词'" 
+                    :un-checked-children="isMobile ? '反向' : '反向提示词'"
                     class="option-switch"
                   />
                 </div>
@@ -716,12 +728,14 @@ const handleSend = generateImage
   justify-content: space-between;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap; /* 允许元素换行 */
 }
 
 .options-group {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap; /* 允许元素换行 */
 }
 
 .option-switch {
@@ -747,6 +761,7 @@ const handleSend = generateImage
   font-size: 1rem;
   height: auto;
   padding: 8px 16px;
+  min-width: 100px; /* 确保按钮有最小宽度 */
 }
 
 .send-button:hover {
@@ -869,6 +884,34 @@ const handleSend = generateImage
   }
 }
 
+@media (max-width: 768px) {
+  .options-area {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .options-group {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px; /* 减小间距 */
+  }
+  
+  .image-count-container {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .send-button {
+    width: 100%;
+    margin-top: 8px;
+  }
+  
+  .option-switch {
+    min-width: 90px; /* 在中等屏幕上减小开关的宽度 */
+  }
+}
+
 @media (max-width: 576px) {
   .prompt-options {
     grid-template-columns: 1fr;
@@ -894,6 +937,20 @@ const handleSend = generateImage
   
   .header-content {
     padding: 0 8px;
+  }
+  
+  .option-switch {
+    min-width: 80px; /* 在小屏幕上进一步减小开关的宽度 */
+    font-size: 0.8rem;
+  }
+  
+  .options-group {
+    gap: 6px; /* 在小屏幕上进一步减小间距 */
+  }
+  
+  :deep(.ant-switch-inner) {
+    font-size: 0.7rem !important; /* 减小开关内文字大小 */
+    padding: 0 4px !important; /* 减小内边距 */
   }
 }
 
