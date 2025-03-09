@@ -14,23 +14,48 @@ load_dotenv()
 # 获取服务器 URL
 SERVER_URL = os.getenv("LOCAL_SERVER_URL", "http://127.0.0.1:11002")
 
-def test_text2image():
+def test_text2image(prompt="一只可爱的猫咪在草地上玩耍", negative_prompt="模糊, 变形, 低质量", style_prompt="写实风格", 
+                   color_prompt="明亮色彩", light_prompt="自然光照", 
+                   composition_prompt="居中构图", count=1, model=None, 
+                   width=None, height=None, need_optimize_prompt=True):
     """
     测试文本生成图像接口
+    
+    参数:
+        prompt (str): 生成图像的文本提示词
+        negative_prompt (str): 负面提示词
+        style_prompt (str): 风格提示词
+        color_prompt (str): 颜色提示词
+        light_prompt (str): 光照提示词
+        composition_prompt (str): 构图提示词
+        count (int): 生成图像的数量
+        model (str): 使用的模型名称
+        width (int): 输出图像宽度
+        height (int): 输出图像高度
+        need_optimize_prompt (bool): 是否需要优化提示词
     """
     # 构建请求 URL
     url = f"{SERVER_URL}/image_generation"
     
     # 构建请求参数
     payload = {
-        "prompt": "一只可爱的猫咪在草地上玩耍",
-        "negativePrompt": "模糊, 变形, 低质量",
-        "stylePrompt": "写实风格",
-        "colorPrompt": "明亮色彩",
-        "lightPrompt": "自然光照",
-        "compositionPrompt": "居中构图",
-        "count": 1
+        "prompt": prompt,
+        "negativePrompt": negative_prompt,
+        "stylePrompt": style_prompt,
+        "colorPrompt": color_prompt,
+        "lightPrompt": light_prompt,
+        "compositionPrompt": composition_prompt,
+        "count": count,
+        "needOptimizePrompt": need_optimize_prompt
     }
+    
+    # 添加可选参数
+    if model:
+        payload["model"] = model
+    if width:
+        payload["width"] = width
+    if height:
+        payload["height"] = height
     
     # 打印请求信息
     print(f"发送请求到: {url}")

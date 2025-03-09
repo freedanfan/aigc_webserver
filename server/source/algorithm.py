@@ -72,7 +72,7 @@ class ImageGenerator:
                         output_size_width: int = 1024, 
                         output_size_height: int = 1024, 
                         n: int = 1,
-                        need_optimize_prompt: bool = False):
+                        need_optimize_prompt: bool = True):
         
         if not model:
             model = self.model  

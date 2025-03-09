@@ -1,0 +1,57 @@
+[project]
+name = "aigc-webserver"
+version = "0.1.0"
+description = "AIGC进行文本到图像的生成的Web服务"
+authors = [
+    {name = "AIGC Team", email = "example@example.com"},
+]
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn>=0.23.2",
+    "pydantic>=2.4.2",
+    "python-dotenv>=1.0.0",
+    "requests>=2.31.0",
+    "boto3>=1.28.64",
+    "together>=0.1.5",
+]
+requires-python = ">=3.9"
+readme = "README.md"
+license = {text = "MIT"}
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.2",
+    "black>=23.9.1",
+    "isort>=5.12.0",
+    "flake8>=6.1.0",
+]
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm]
+[tool.pdm.dev-dependencies]
+test = [
+    "pytest>=7.4.2",
+]
+
+[tool.pdm.scripts]
+dev = "python main.py"
+start = { cmd = "bash -c 'mkdir -p logs && nohup uvicorn main:app --host 0.0.0.0 --port 11002 > logs/$(date +%Y-%m-%d).log 2>&1 &'", env = { PYTHONPATH = ".", ENV = "dev" }}
+test = "pytest"
+test_text2image = "python test_tools/test_text2image.py"
+test_text2image_cli = "python test_tools/test_text2image_cli.py"
+test_image_example = "python test_tools/test_text2image_cli.py --prompt '一只可爱的猫咪在草地上玩耍' --negative_prompt '模糊, 变形, 低质量' --style_prompt '写实风格' --color_prompt '明亮色彩' --light_prompt '自然光照' --composition_prompt '居中构图' --count 1 --width 1024 --height 1024 --model 'black-forest-labs/FLUX.1-schnell-Free' --need_optimize_prompt True"
+
+[tool.black]
+line-length = 88
+target-version = ["py39"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.pytest]
+testpaths = ["tests"]
+python_files = "test_*.py" 

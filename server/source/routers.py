@@ -24,11 +24,26 @@ async def image_generation(request: dict):
             combined_prompt += f", 光照: {request.get('lightPrompt')}"
         if request.get("compositionPrompt"):
             combined_prompt += f", 构图: {request.get('compositionPrompt')}"
+        # 获取模型选择
+        model = request.get("model", None)
         
+        # 获取输出尺寸设置
+        output_size_width = request.get("width", None)
+        output_size_height = request.get("height", None)
+        
+        # 获取是否需要提示词优化
+        need_optimize_prompt = request.get("needOptimizePrompt", True)
         # 获取生成图片数量
         n = request.get("count", 1)
         
-        image_urls = await image_generator.text2image(prompt=combined_prompt,n=n)
+        image_urls = await image_generator.text2image(
+            prompt=combined_prompt,
+            model=model,
+            output_size_width=output_size_width,
+            output_size_height=output_size_height,
+            n=n,
+            need_optimize_prompt=need_optimize_prompt
+        )
         # # 判断是否有参考图片
         # if request.get("referenceImage"):
         #     # 将base64图像上传到S3并获取URL
