@@ -8,7 +8,7 @@ import { API_BASE_URL, API_PREFIX, getApiUrl } from '@/utils/config'
  */
 const service = axios.create({
   baseURL: API_BASE_URL, // 使用环境变量中的 API 基础 URL
-  timeout: 15000, // 请求超时时间，单位毫秒
+  timeout: 200000, // 请求超时时间，单位毫秒
   headers: {
     'Content-Type': 'application/json;charset=utf-8' // 默认请求头
   }
