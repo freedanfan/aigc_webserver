@@ -66,6 +66,8 @@ export interface GenerateImageParams {
   referenceImage?: string
   /** 生成图片数量，默认为 1 */
   count?: number
+  /** 是否需要优化提示词，1表示是，0表示否 */
+  need_optimize_prompt?: number
 }
 
 /**

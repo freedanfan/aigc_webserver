@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
+    "build:test": "vue-tsc && vite build --mode test",
+    "build:prod": "vue-tsc && vite build --mode production",
     "preview": "vite preview",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },

@@ -1,8 +1,6 @@
 import { get, post, del } from '@/utils/request'
 import { ResponseData, GenerateImageParams, GeneratedImage, PaginationResult } from '../types'
-
-// 是否使用模拟数据（当后端服务不可用时）
-const USE_MOCK = false
+import { USE_MOCK } from '@/utils/config'
 
 /**
  * 生成模拟图片数据
@@ -50,18 +48,30 @@ export default {
       // 获取要生成的图片数量，默认为 1
       const count = params.count || 1
       
+      // 是否需要优化提示词
+      const needOptimize = params.need_optimize_prompt === 1
+      
+      // 记录优化状态
+      const optimizeStatus = needOptimize ? '已优化' : '未优化'
+      
       // 模拟网络延迟，根据图片数量增加延迟时间
       const delay = 1000 + count * 500 // 基础延迟 1 秒，每张图片增加 0.5 秒
       
       return new Promise(resolve => {
         setTimeout(() => {
-          resolve(createMockResponse(generateMockImages(count)))
+          // 生成模拟图片，并在标题中添加优化状态
+          const images = generateMockImages(count).map(img => ({
+            ...img,
+            title: `${img.title} (${optimizeStatus})`
+          }))
+          
+          resolve(createMockResponse(images))
         }, delay)
       })
     }
     
     // 否则调用真实 API
-    return post('/api/image_generation', params)
+    return post('/image/generate', params)
   },
   
   /**
@@ -72,7 +82,24 @@ export default {
    * @returns 返回分页的图片列表和分页信息
    */
   getHistoryImages(page = 1, pageSize = 10): Promise<ResponseData<PaginationResult<GeneratedImage>>> {
-    return get('/api/image/history', { page, pageSize })
+    // 如果使用模拟数据，则返回模拟数据
+    if (USE_MOCK) {
+      console.log('使用模拟数据获取历史图片，页码：', page, '每页数量：', pageSize)
+      // 模拟网络延迟
+      return new Promise(resolve => {
+        setTimeout(() => {
+          resolve(createMockResponse({
+            list: generateMockImages(pageSize),
+            total: 100,
+            page,
+            pageSize
+          }))
+        }, 800)
+      })
+    }
+    
+    // 否则调用真实 API
+    return get('/image/history', { page, pageSize })
   },
   
   /**
@@ -82,12 +109,25 @@ export default {
    * @returns 返回上传后的图片 URL
    */
   uploadReferenceImage(file: File): Promise<ResponseData<{ url: string }>> {
+    // 如果使用模拟数据，则返回模拟数据
+    if (USE_MOCK) {
+      console.log('使用模拟数据上传图片，文件名：', file.name)
+      // 模拟网络延迟
+      return new Promise(resolve => {
+        setTimeout(() => {
+          resolve(createMockResponse({
+            url: `https://picsum.photos/400/300?random=${Math.random()}`
+          }))
+        }, 1200)
+      })
+    }
+    
     // 创建 FormData 对象，用于文件上传
     const formData = new FormData()
     formData.append('file', file)
     
     // 发送 POST 请求，设置正确的 Content-Type
-    return post('/api/image/upload', formData, {
+    return post('/image/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -100,7 +140,19 @@ export default {
    * @returns 返回删除结果
    */
   deleteImage(id: number): Promise<ResponseData<null>> {
-    return del(`/api/image/${id}`)
+    // 如果使用模拟数据，则返回模拟数据
+    if (USE_MOCK) {
+      console.log('使用模拟数据删除图片，ID：', id)
+      // 模拟网络延迟
+      return new Promise(resolve => {
+        setTimeout(() => {
+          resolve(createMockResponse(null))
+        }, 500)
+      })
+    }
+    
+    // 否则调用真实 API
+    return del(`/image/${id}`)
   },
   
   /**
@@ -109,7 +161,24 @@ export default {
    * @returns 返回图片详细信息
    */
   getImageDetail(id: number): Promise<ResponseData<GeneratedImage>> {
-    return get(`/api/image/${id}`)
+    // 如果使用模拟数据，则返回模拟数据
+    if (USE_MOCK) {
+      console.log('使用模拟数据获取图片详情，ID：', id)
+      // 模拟网络延迟
+      return new Promise(resolve => {
+        setTimeout(() => {
+          resolve(createMockResponse({
+            id,
+            url: `https://picsum.photos/400/300?random=${Math.random()}`,
+            title: `图片详情 ${id}`,
+            createdAt: new Date().toISOString()
+          }))
+        }, 600)
+      })
+    }
+    
+    // 否则调用真实 API
+    return get(`/image/${id}`)
   },
   
   /**
@@ -119,6 +188,18 @@ export default {
    * @returns 返回推荐的图片列表
    */
   getRecommendImages(limit = 4): Promise<ResponseData<GeneratedImage[]>> {
-    return get('/api/image/recommend', { limit })
+    // 如果使用模拟数据，则返回模拟数据
+    if (USE_MOCK) {
+      console.log('使用模拟数据获取推荐图片，数量：', limit)
+      // 模拟网络延迟
+      return new Promise(resolve => {
+        setTimeout(() => {
+          resolve(createMockResponse(generateMockImages(limit)))
+        }, 700)
+      })
+    }
+    
+    // 否则调用真实 API
+    return get('/image/recommend', { limit })
   }
 } 

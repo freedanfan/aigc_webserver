@@ -20,6 +20,7 @@ const previewTitle = ref('')
 const hasUploadedImage = ref(false) // 是否已上传图片
 const imageBase64 = ref<string>('') // 存储图片的 base64 编码
 const imageCount = ref<number>(1) // 生成图片数量，默认为 1，最大为 6
+const needOptimizePrompt = ref<boolean>(true) // 是否需要优化提示词，默认为是
 
 // 生成图片相关状态
 const generatedImages = ref<GeneratedImage[]>([])
@@ -184,6 +185,9 @@ const generateImage = async () => {
       // 生成图片数量
       count: imageCount.value,
       
+      // 是否需要优化提示词
+      need_optimize_prompt: needOptimizePrompt.value ? 1 : 0,
+      
       // 仅当用户开启反向提示词时，才添加反向提示词
       negativePrompt: useNegativePrompt.value ? negativePromptValue.value : undefined,
       
@@ -315,11 +319,21 @@ const handleSend = generateImage
               />
               
               <div class="options-area">
-                <a-switch 
-                  v-model:checked="useNegativePrompt" 
-                  :checked-children="'开启反向提示词'" 
-                  :un-checked-children="'关闭反向提示词'"
-                />
+                <div class="options-group">
+                  <a-switch 
+                    v-model:checked="needOptimizePrompt" 
+                    :checked-children="'优化提示词'" 
+                    :un-checked-children="'不优化提示词'"
+                    class="option-switch"
+                  />
+                  
+                  <a-switch 
+                    v-model:checked="useNegativePrompt" 
+                    :checked-children="'开启反向提示词'" 
+                    :un-checked-children="'关闭反向提示词'"
+                    class="option-switch"
+                  />
+                </div>
                 
                 <div class="image-count-container">
                   <span class="image-count-label">生成数量:</span>
@@ -702,6 +716,16 @@ const handleSend = generateImage
   justify-content: space-between;
   align-items: center;
   gap: 16px;
+}
+
+.options-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.option-switch {
+  min-width: 120px;
 }
 
 .image-count-container {

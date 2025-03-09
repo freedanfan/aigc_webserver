@@ -254,3 +254,88 @@ python main.py
 
 - 提交 [GitHub Issue](https://github.com/freedanfan/aigc_webserver/issues)
 - 发送邮件至项目维护者
+
+## 环境配置
+
+项目支持多环境配置，可以根据不同的环境使用不同的配置：
+
+### 环境文件
+
+- `.env`: 所有环境共享的变量
+- `.env.development`: 开发环境配置
+- `.env.test`: 测试环境配置
+- `.env.production`: 生产环境配置
+
+### 主要配置项
+
+- `VITE_APP_API_BASE_URL`: API 服务器地址
+- `VITE_APP_API_PREFIX`: API 请求前缀
+- `VITE_APP_USE_MOCK`: 是否使用模拟数据
+- `VITE_APP_ENV`: 环境标识
+- `VITE_APP_DEBUG`: 是否开启调试模式
+
+## 项目结构
+
+```
+aigc_webserver/
+├── public/              # 静态资源
+├── src/                 # 源代码
+│   ├── api/             # API 接口
+│   │   ├── modules/     # API 模块
+│   │   └── types.ts     # API 类型定义
+│   │   
+│   ├── assets/          # 资源文件
+│   ├── components/      # 公共组件
+│   ├── router/          # 路由配置
+│   ├── stores/          # 状态管理
+│   ├── utils/           # 工具函数
+│   │   ├── config.ts    # 配置工具
+│   │   └── request.ts   # 请求工具
+│   ├── views/           # 页面组件
+│   ├── App.vue          # 根组件
+│   └── main.ts          # 入口文件
+├── .env                 # 环境变量（所有环境）
+├── .env.development     # 开发环境变量
+├── .env.test            # 测试环境变量
+├── .env.production      # 生产环境变量
+├── index.html           # HTML 模板
+├── tsconfig.json        # TypeScript 配置
+├── vite.config.ts       # Vite 配置
+└── package.json         # 项目依赖
+```
+
+## API 模拟数据
+
+项目支持使用模拟数据进行开发，可以在不依赖后端服务的情况下进行前端开发。
+
+- 在 `.env.development` 中设置 `VITE_APP_USE_MOCK=true` 开启模拟数据
+- 模拟数据实现在 `src/api/modules/` 目录下的各个模块中
+
+## 代理配置
+
+在开发环境中，通过 Vite 的代理功能将 API 请求转发到后端服务：
+
+```javascript
+// vite.config.ts
+export default defineConfig(({ mode }) => {
+  // 加载环境变量
+  const env = loadEnv(mode, process.cwd())
+  
+  // 获取环境变量
+  const apiBaseUrl = env.VITE_APP_API_BASE_URL || 'http://localhost:11002'
+  const apiPrefix = env.VITE_APP_API_PREFIX || '/api'
+  
+  return {
+    // ...
+    server: {
+      proxy: {
+        [apiPrefix]: {
+          target: apiBaseUrl,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(new RegExp(`^${apiPrefix}`), ''),
+        }
+      }
+    }
+  }
+})
+```
