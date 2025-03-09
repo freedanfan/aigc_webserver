@@ -1,14 +1,47 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body
 from source.models import Text2ImageRequest, Text2ImageResponse
 from source.algorithm import ImageGenerator
+from typing import Dict, Any
 
 # 创建路由器
-router = APIRouter()
+router = APIRouter(tags=["图像生成"])
 image_generator = ImageGenerator()
 
 # 创建路由
-@router.post("/image_generation", response_model=Text2ImageResponse)
-async def image_generation(request: dict):
+@router.post("/image_generation", response_model=Text2ImageResponse, summary="文本生成图像", description="根据文本提示词生成图像")
+async def image_generation(
+    request: Dict[str, Any] = Body(
+        ...,
+        example={
+            "prompt": "一只可爱的猫咪在草地上玩耍",
+            "negativePrompt": "模糊, 变形, 低质量",
+            "stylePrompt": "写实风格",
+            "colorPrompt": "明亮色彩",
+            "lightPrompt": "自然光照",
+            "compositionPrompt": "居中构图",
+            "count": 1,
+            "width": 1024,
+            "height": 1024,
+            "model": "black-forest-labs/FLUX.1-schnell-Free",
+            "needOptimizePrompt": True
+        }
+    )
+):
+    """
+    文本生成图像API
+    
+    - **prompt**: 生成图像的文本提示词
+    - **negativePrompt**: 负面提示词，指定不希望出现在图像中的内容
+    - **stylePrompt**: 风格提示词，指定图像的艺术风格
+    - **colorPrompt**: 颜色提示词，指定图像的色彩偏好
+    - **lightPrompt**: 光照提示词，指定图像的光照效果
+    - **compositionPrompt**: 构图提示词，指定图像的构图方式
+    - **count**: 生成图像的数量
+    - **width**: 输出图像宽度
+    - **height**: 输出图像高度
+    - **model**: 使用的模型名称
+    - **needOptimizePrompt**: 是否需要优化提示词
+    """
     try:
         # 组合提示词
         combined_prompt = request.get("prompt", "")
