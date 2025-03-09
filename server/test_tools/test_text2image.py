@@ -35,7 +35,7 @@ def test_text2image(prompt="一只可爱的猫咪在草地上玩耍", negative_p
         need_optimize_prompt (bool): 是否需要优化提示词
     """
     # 构建请求 URL
-    url = f"{SERVER_URL}/image_generation"
+    url = f"{SERVER_URL}/image/generate"
     
     # 构建请求参数
     payload = {
