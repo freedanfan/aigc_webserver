@@ -36,3 +36,4 @@ coverage
 .env.test.local
 
 __pycache__
+

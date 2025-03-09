@@ -32,6 +32,7 @@ export default defineConfig(({ mode }) => {
           target: apiBaseUrl,
           changeOrigin: true,
           rewrite: (path) => path.replace(new RegExp(`^${apiPrefix}`), ''),
+          secure: false, // 如果是 https 且有证书问题，设置为 false
           // 添加错误处理，当后端不可用时不会阻止前端启动
           configure: (proxy, options) => {
             proxy.on('error', (err, req, res) => {
@@ -49,6 +50,33 @@ export default defineConfig(({ mode }) => {
           }
         }
       }
-    }
+    },
+    build: {
+      // 生产环境构建配置
+      outDir: 'dist', // 输出目录
+      assetsDir: 'assets', // 静态资源目录
+      sourcemap: false, // 生产环境不需要 sourcemap
+      minify: 'terser', // 使用 terser 进行压缩
+      terserOptions: {
+        compress: {
+          drop_console: env.VITE_APP_ENV === 'production', // 生产环境删除 console
+          drop_debugger: env.VITE_APP_ENV === 'production', // 生产环境删除 debugger
+        },
+      },
+      // 分块策略
+      rollupOptions: {
+        output: {
+          chunkFileNames: 'assets/js/[name]-[hash].js',
+          entryFileNames: 'assets/js/[name]-[hash].js',
+          assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
+          manualChunks: {
+            vue: ['vue', 'vue-router', 'pinia'],
+            'ant-design-vue': ['ant-design-vue'],
+          },
+        },
+      },
+    },
+    // 基本公共路径，如果部署在子路径下需要修改
+    base: '/',
   }
 }) 

@@ -61,36 +61,104 @@ AIGC Webserver 是一个基于 Vue 3 和 FastAPI 构建的全栈应用，提供 
 
 ### 前端部署
 
-1. **克隆仓库**
+#### 方法一：传统部署
+
+1. **构建生产版本**
 
 ```bash
-git clone https://github.com/freedanfan/aigc_webserver.git
-cd aigc_webserver
-```
-
-2. **安装依赖**
-
-```bash
+# 安装依赖
 npm install
-```
 
-3. **开发环境运行**
-
-```bash
-npm run dev
-```
-
-4. **生产环境构建**
-
-```bash
+# 构建生产环境版本
 npm run build
 ```
 
-5. **预览生产构建**
+2. **使用部署脚本**
+
+我们提供了一个自动化部署脚本，可以简化部署过程：
 
 ```bash
-npm run preview
+# 赋予脚本执行权限
+chmod +x deploy.sh
+
+# 执行部署脚本（默认生产环境）
+./deploy.sh
+
+# 或指定测试环境
+./deploy.sh test
 ```
+
+3. **手动部署到 Nginx**
+
+将构建生成的 `dist` 目录内容复制到 Nginx 的网站根目录：
+
+```bash
+# 复制构建结果到 Nginx 目录
+sudo cp -r dist/* /usr/share/nginx/html/
+
+# 复制 Nginx 配置
+sudo cp nginx.conf /etc/nginx/nginx.conf
+
+# 重启 Nginx
+sudo systemctl restart nginx
+```
+
+#### 方法二：Docker 部署
+
+1. **使用 Docker 构建和运行**
+
+```bash
+# 构建 Docker 镜像
+docker build -t aigc-frontend .
+
+# 运行容器
+docker run -d -p 80:80 --name aigc-frontend aigc-frontend
+```
+
+2. **使用 Docker Compose**
+
+```bash
+# 启动服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
+```
+
+### Nginx 配置说明
+
+项目包含一个优化的 Nginx 配置文件 `nginx.conf`，主要特点：
+
+- 单页应用路由支持
+- 静态资源缓存优化
+- GZIP 压缩
+- API 代理配置
+- 错误页面处理
+
+如果您需要自定义 Nginx 配置，请修改 `nginx.conf` 文件中的相关设置。
+
+### 环境变量配置
+
+部署前请确保 `.env.production` 文件中的环境变量正确配置：
+
+```
+# 生产环境配置
+NODE_ENV=production
+
+# API 配置
+VITE_APP_API_BASE_URL=https://您的后端服务器地址:端口
+VITE_APP_API_PREFIX=/api
+VITE_APP_USE_MOCK=false
+
+# 其他生产环境特定配置
+VITE_APP_ENV=production
+VITE_APP_DEBUG=false
+```
+
+特别注意 `VITE_APP_API_BASE_URL` 需要设置为您实际的后端服务地址。
 
 ### 后端部署
 
